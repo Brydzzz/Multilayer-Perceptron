@@ -78,7 +78,7 @@ class MLP:
         learning_rate: float,
         class_column: str,
     ) -> None:
-        for i in range(epochs):
+        for _ in range(epochs):
             mini_batches = self.ininitialize_mini_batches(
                 training_data, mini_batch_size
             )
@@ -128,4 +128,4 @@ class MLP:
         Returns:
             list[int]: Predicted class
         """
-        pass
+        self.feed_forward(X)
