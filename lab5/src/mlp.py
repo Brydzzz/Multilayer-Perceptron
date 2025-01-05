@@ -55,9 +55,9 @@ class MLP:
         weight_dervs = [np.zeros(w.shape) for w in self.weights]
         bias_dervs = [np.zeros(b.shape) for b in self.biases]
         activs, zs = self.get_activations_and_zs(a)
-        loss_derv = self.loss_derv(activs[-1], targets) * self.activation_derv(
-            zs[-1]
-        )
+        loss_derv = self.loss_derv(
+            activs[-1], targets
+        ) * self.activation_derv(zs[-1])
         bias_dervs[-1] = loss_derv
         weight_dervs[-1] = np.dot(loss_derv, activs[-2].transpose())
         for i in range(len(self.weights) - 2, -1, -1):
@@ -76,31 +76,34 @@ class MLP:
         learning_rate: float,
         class_column: str,
     ) -> None:
-        for _ in range(epochs):
+        for epoch in range(epochs):
             mini_batches = self.initialize_mini_batches(
                 training_data, mini_batch_size
             )
             for batch in mini_batches:
                 self.process_batch(batch, class_column, learning_rate)
+            print(f"Epoch {epoch + 1} completed.")
 
     def process_batch(self, batch, class_column, learning_rate):
-        weight_dervs = [np.zeros(w.shape) for w in self.weights]
-        bias_dervs = [np.zeros(b.shape) for b in self.biases]
+        weight_gradient = [np.zeros(w.shape) for w in self.weights]
+        bias_gradient = [np.zeros(b.shape) for b in self.biases]
         classes = batch[class_column].to_numpy()
-        inputs = batch.drop(class_column).to_numpy()
+        inputs = batch.drop(columns=[class_column]).to_numpy()
         for i in range(len(classes)):
-            set_weights, set_biases = self.backward(inputs[i], classes[i])
-            weight_dervs = [
-                wd + sw for wd, sw in zip(weight_dervs, set_weights)
+            weights_dervs, biases_dervs = self.backward(inputs[i], classes[i])
+            weight_gradient = [
+                wg + wd for wg, wd in zip(weight_gradient, weights_dervs)
             ]
-            bias_dervs = [bd + sb for bd, sb in zip(bias_dervs, set_biases)]
+            bias_gradient = [
+                bg + bd for bg, bd in zip(bias_gradient, biases_dervs)
+            ]
         self.weights = [
-            weight - learning_rate * w_derv / len(inputs)
-            for weight, w_derv in zip(self.weights, weight_dervs)
+            weight - learning_rate * w_grad / len(inputs)
+            for weight, w_grad in zip(self.weights, weight_gradient)
         ]
         self.biases = [
-            bias - learning_rate * b_derv / len(inputs)
-            for bias, b_derv in zip(self.biases, bias_dervs)
+            bias - learning_rate * b_grad / len(inputs)
+            for bias, b_grad in zip(self.biases, bias_gradient)
         ]
 
     def initialize_mini_batches(
@@ -108,22 +111,24 @@ class MLP:
     ):
         mini_batches = []
         while not t_data.empty:
-            mini_batch = t_data.sample(
-                n=min(mini_batch_size, len(t_data)), random_state=42
-            )
+            mini_batch = t_data.sample(n=min(mini_batch_size, len(t_data)))
             mini_batches.append(mini_batch)
             t_data = t_data.drop(mini_batch.index)
         return mini_batches
 
-    def predict(self, X: np.ndarray) -> list[int]:
+    def predict(self, X: pd.DataFrame) -> list[int]:
         """
         A method that returns predicted class
         from the dataset given.
 
         Args:
-            X (np.ndarray): The dataset.
+            X (pd.DataFrame): The dataset.
 
         Returns:
             list[int]: Predicted class
         """
-        self.feed_forward(X)
+        predictions = []
+        for x in X:
+            prediction = self.feed_forward(x)
+            predictions.append(prediction)
+        return predictions
