@@ -29,7 +29,7 @@ if __name__ == "__main__":
     )
     validation_data = xor_data.copy()
     mlp = MLP(
-        layers_sizes=[2, 4, 1],
+        layers_sizes=[2, 5, 4, 3, 1],
         loss_func=avg_square_loss,
         activation_func=relu,
         loss_derv=avg_sqr_derv,

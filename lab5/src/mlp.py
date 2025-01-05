@@ -31,6 +31,7 @@ class MLP:
         ]
 
     def feed_forward(self, a: np.ndarray) -> np.ndarray:
+        a = a.reshape(a.shape[0], 1)
         for w, b in zip(self.weights, self.biases):
             z = np.dot(w, a) + b
             a = self.activation(z)
@@ -39,6 +40,7 @@ class MLP:
     def get_activations_and_zs(
         self, a: np.ndarray
     ) -> Tuple[list[np.ndarray], list[np.ndarray]]:
+        a = a.reshape(a.shape[0], 1)
         activs = [a]
         zs = []
         for w, b in zip(self.weights, self.biases):
@@ -55,9 +57,9 @@ class MLP:
         weight_dervs = [np.zeros(w.shape) for w in self.weights]
         bias_dervs = [np.zeros(b.shape) for b in self.biases]
         activs, zs = self.get_activations_and_zs(a)
-        loss_derv = self.loss_derv(
-            activs[-1], targets
-        ) * self.activation_derv(zs[-1])
+        loss_derv = self.loss_derv(activs[-1], targets) * self.activation_derv(
+            zs[-1]
+        )
         bias_dervs[-1] = loss_derv
         weight_dervs[-1] = np.dot(loss_derv, activs[-2].transpose())
         for i in range(len(self.weights) - 2, -1, -1):
