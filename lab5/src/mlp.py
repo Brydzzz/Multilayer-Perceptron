@@ -55,19 +55,17 @@ class MLP:
         weight_dervs = [np.zeros(w.shape) for w in self.weights]
         bias_dervs = [np.zeros(b.shape) for b in self.biases]
         activs, zs = self.get_activations_and_zs(a)
-        # loss = self.loss(self.get_targets(activs[:-1]))
-        # loss = self.loss(activs[-1], targets)
         loss_derv = self.loss_derv(activs[-1], targets) * self.activation_derv(
             zs[-1]
         )
         bias_dervs[-1] = loss_derv
         weight_dervs[-1] = np.dot(loss_derv, activs[-2].transpose())
-        for i in range(len(self.weights) - 1, 0, -1):
+        for i in range(len(self.weights) - 2, -1, -1):
             loss_derv = np.dot(
-                self.weights[i].transpose(), loss_derv
-            ) * self.activation_derv(zs[i - 1])
+                self.weights[i + 1].transpose(), loss_derv
+            ) * self.activation_derv(zs[i])
             bias_dervs[i] = loss_derv
-            weight_dervs[i] = np.dot(loss_derv, activs[i + 1].transpose())
+            weight_dervs[i] = np.dot(loss_derv, activs[i].transpose())
         return weight_dervs, bias_dervs
 
     def train(
@@ -79,7 +77,7 @@ class MLP:
         class_column: str,
     ) -> None:
         for _ in range(epochs):
-            mini_batches = self.ininitialize_mini_batches(
+            mini_batches = self.initialize_mini_batches(
                 training_data, mini_batch_size
             )
             for batch in mini_batches:
@@ -105,7 +103,7 @@ class MLP:
             for bias, b_derv in zip(self.biases, bias_dervs)
         ]
 
-    def ininitialize_mini_batches(
+    def initialize_mini_batches(
         self, t_data: pd.DataFrame, mini_batch_size: int
     ):
         mini_batches = []
