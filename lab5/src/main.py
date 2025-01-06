@@ -1,47 +1,66 @@
+import sklearn.datasets
+from xor import (
+    sigmoid,
+    sigmoid_derv,
+    softmax,
+    softmax_derv,
+    avg_square_loss,
+    avg_sqr_derv,
+    relu,
+    relu_der,
+)
 import numpy as np
 import pandas as pd
 from mlp import MLP
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
 
 
-def relu(sum: np.ndarray):
-    return np.maximum(0, sum)
-
-
-def relu_der(sum):
-    return np.where(sum > 0, 1, 0)
-
-
-def avg_square_loss(sum, target):
-    return 0.5 * ((sum - target) ** 2)
-
-
-def avg_sqr_derv(sum, target):
-    return sum - target
+def one_hot(number: int):
+    encode = np.zeros(shape=(10, 1))
+    encode[number] = 1
+    return encode
 
 
 if __name__ == "__main__":
-    # xor train data
-    xor_inputs = np.array(([0, 0], [0, 1], [1, 0], [1, 1]))
-    xor_results = np.array([[0], [1], [1], [0]])
-    xor_data = pd.DataFrame(
-        data=np.hstack((xor_inputs, xor_results)),
-        columns=["input_1", "input_2", "target"],
+    # mnsint test data
+    digits = load_digits(as_frame=True)
+    X_train, X_test, y_train, y_test = train_test_split(
+        digits.data, digits.target, test_size=0.3, random_state=42
     )
-    validation_data = xor_data.copy()
+
+    X_train["target"] = y_train
+    # X_test["target"] = y_test
     mlp = MLP(
-        layers_sizes=[2, 5, 4, 3, 1],
+        layers_sizes=[64, 100, 70, 40, 10],
         loss_func=avg_square_loss,
-        activation_func=relu,
+        activation_func=sigmoid,
         loss_derv=avg_sqr_derv,
-        activation_derv=relu_der,
+        activation_derv=sigmoid_derv,
+        output_func=softmax,
+        output_derv=softmax_derv,
+        target_fit=one_hot,
     )
 
     mlp.train(
-        training_data=xor_data,
-        epochs=5,
-        mini_batch_size=2,
-        learning_rate=0.01,
+        training_data=X_train,
+        epochs=100,
+        mini_batch_size=10,
+        learning_rate=0.5,
         class_column="target",
     )
 
-    mlp.predict(validation_data)
+    results = mlp.predict(X_test)
+
+    def softmax_to_digits(array):
+        exp_values = np.exp(array - np.max(array))
+        probabilities = exp_values / np.sum(exp_values)
+
+        return np.argmax(probabilities)
+
+    classes = [softmax_to_digits(result) for result in results]
+    # accuracy = np.mean(np.abs(results - xor_results) < 0.001)
+    accuracy = sklearn.metrics.accuracy_score(y_test, classes)
+    print(f"Results: {classes}")
+    print(f"Should be: {y_test}")
+    print(f"Accuracy: {accuracy}")

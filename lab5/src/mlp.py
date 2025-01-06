@@ -11,6 +11,9 @@ class MLP:
         activation_func: Callable[[np.ndarray], np.ndarray],
         loss_derv: Callable,
         activation_derv: Callable,
+        output_func: Callable,
+        output_derv: Callable,
+        target_fit: Callable,
     ):
         self.weights = self.__init_weights(layers_sizes)
         self.biases = self.__init_biases(layers_sizes)
@@ -18,10 +21,17 @@ class MLP:
         self.activation = activation_func
         self.loss_derv = loss_derv
         self.activation_derv = activation_derv
+        self.output_activ = output_func
+        self.output_derv = output_derv
+        self.target_fit = target_fit
 
     def __init_weights(self, lsizes):
         return [
-            np.random.uniform(low=-1, high=1, size=(nout, nin))
+            np.random.uniform(
+                low=-np.sqrt(6 / nin),
+                high=np.sqrt(6 / nin),
+                size=(nout, nin),
+            )
             for nout, nin in zip(lsizes[1:], lsizes[:-1])
         ]
 
@@ -32,9 +42,11 @@ class MLP:
 
     def feed_forward(self, a: np.ndarray) -> np.ndarray:
         a = a.reshape(a.shape[0], 1)
-        for w, b in zip(self.weights, self.biases):
+        for w, b in zip(self.weights[:-1], self.biases[:-1]):
             z = np.dot(w, a) + b
             a = self.activation(z)
+        z = np.dot(self.weights[-1], a) + self.biases[-1]
+        a = self.output_activ(z)
         return a
 
     def get_activations_and_zs(
@@ -43,11 +55,15 @@ class MLP:
         a = a.reshape(a.shape[0], 1)
         activs = [a]
         zs = []
-        for w, b in zip(self.weights, self.biases):
+        for w, b in zip(self.weights[:-1], self.biases[:-1]):
             z = np.dot(w, a) + b
             zs.append(z)
             a = self.activation(z)
             activs.append(a)
+        z = np.dot(self.weights[-1], a) + self.biases[-1]
+        zs.append(z)
+        a = self.output_activ(z)
+        activs.append(a)
         return activs, zs
 
     def backward(
@@ -57,7 +73,8 @@ class MLP:
         weight_dervs = [np.zeros(w.shape) for w in self.weights]
         bias_dervs = [np.zeros(b.shape) for b in self.biases]
         activs, zs = self.get_activations_and_zs(a)
-        loss_derv = self.loss_derv(activs[-1], targets) * self.activation_derv(
+        # targets = targets.reshape(targets.shape[0], 1)
+        loss_derv = self.loss_derv(activs[-1], targets) * self.output_derv(
             zs[-1]
         )
         bias_dervs[-1] = loss_derv
@@ -90,6 +107,7 @@ class MLP:
         weight_gradient = [np.zeros(w.shape) for w in self.weights]
         bias_gradient = [np.zeros(b.shape) for b in self.biases]
         classes = batch[class_column].to_numpy()
+        classes = [self.target_fit(cls) for cls in classes]
         inputs = batch.drop(columns=[class_column]).to_numpy()
         for i in range(len(classes)):
             weights_dervs, biases_dervs = self.backward(inputs[i], classes[i])
@@ -118,7 +136,7 @@ class MLP:
             t_data = t_data.drop(mini_batch.index)
         return mini_batches
 
-    def predict(self, X: pd.DataFrame) -> list[int]:
+    def predict(self, X: pd.DataFrame) -> np.ndarray[float]:
         """
         A method that returns predicted class
         from the dataset given.
@@ -130,7 +148,7 @@ class MLP:
             list[int]: Predicted class
         """
         predictions = []
-        for x in X:
-            prediction = self.feed_forward(x)
+        for _, row in X.iterrows():
+            prediction = self.feed_forward(row.to_numpy())
             predictions.append(prediction)
         return predictions
