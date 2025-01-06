@@ -22,17 +22,32 @@ def one_hot(number: int):
     return encode
 
 
+def scale_row(X):
+    new_row = np.zeros(X.shape)
+    for i, x in enumerate(X):
+        new_row[i] = (x - np.min(X)) / (np.max(X) - np.min(X))
+    return new_row
+
+
+def rescale_inputs(X):
+    for idx, row in X.iterrows():
+        row = scale_row(row.to_numpy())
+        X.loc[idx] = row
+    return X
+
+
 if __name__ == "__main__":
     # mnsint test data
     digits = load_digits(as_frame=True)
     X_train, X_test, y_train, y_test = train_test_split(
         digits.data, digits.target, test_size=0.3, random_state=42
     )
-
+    # X_train = rescale_inputs(X_train)
+    # X_test = rescale_inputs(X_test)
     X_train["target"] = y_train
     # X_test["target"] = y_test
     mlp = MLP(
-        layers_sizes=[64, 100, 70, 40, 10],
+        layers_sizes=[64, 100, 50, 25, 10],
         loss_func=avg_square_loss,
         activation_func=sigmoid,
         loss_derv=avg_sqr_derv,
@@ -59,8 +74,5 @@ if __name__ == "__main__":
         return np.argmax(probabilities)
 
     classes = [softmax_to_digits(result) for result in results]
-    # accuracy = np.mean(np.abs(results - xor_results) < 0.001)
     accuracy = sklearn.metrics.accuracy_score(y_test, classes)
-    print(f"Results: {classes}")
-    print(f"Should be: {y_test}")
     print(f"Accuracy: {accuracy}")

@@ -28,8 +28,8 @@ class MLP:
     def __init_weights(self, lsizes):
         return [
             np.random.uniform(
-                low=-np.sqrt(6 / nin),
-                high=np.sqrt(6 / nin),
+                low=-np.sqrt(1 / nin),
+                high=np.sqrt(1 / nin),
                 size=(nout, nin),
             )
             for nout, nin in zip(lsizes[1:], lsizes[:-1])
