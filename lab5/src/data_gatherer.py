@@ -89,7 +89,7 @@ class DataGatherer:
         plt.xticks(lr_values)
         plt.ylabel("Accuracy")
         plt.title(
-            "Validation Accuracy vs Learning Rate for Different Mini-batch Sizes",
+            "Validation Accuracy vs Learning Rate for Different Mini-batch Sizes",  # noqa
         )
         plt.legend()
         plt.grid(True, which="minor", linestyle="--", alpha=0.4)
