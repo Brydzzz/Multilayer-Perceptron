@@ -35,7 +35,7 @@ def rescale_inputs(X):
 
 
 if __name__ == "__main__":
-    # mnsint test data
+    # mnist test data
     digits = load_digits(as_frame=True)
     train_set, test_set, y_train, y_test = train_test_split(
         digits.data, digits.target, test_size=0.6, random_state=42
@@ -49,7 +49,6 @@ if __name__ == "__main__":
     train_set["target"] = y_train
     mlp = MLP(
         layers_sizes=[64, 128, 64, 32, 16, 8, 10],
-        loss_func=avg_square_loss,
         activation_func=relu,
         loss_derv=avg_sqr_derv,
         activation_derv=relu_derv,
