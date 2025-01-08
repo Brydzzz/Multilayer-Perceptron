@@ -8,7 +8,6 @@ class MLP:
     def __init__(
         self,
         layers_sizes: list[int],
-        loss_func: Callable[[np.ndarray, np.ndarray], np.ndarray],
         activation_func: Callable[[np.ndarray], np.ndarray],
         loss_derv: Callable[[np.ndarray, np.ndarray], np.ndarray],
         activation_derv: Callable[[np.ndarray], np.ndarray],
@@ -18,7 +17,6 @@ class MLP:
         weight_init: Callable[[int, int], np.ndarray],
         bias_init: Callable[[int], np.ndarray],
     ):
-        self.loss = loss_func
         self.activation = activation_func
         self.loss_derv = loss_derv
         self.activation_derv = activation_derv
