@@ -1,6 +1,6 @@
 import sklearn.datasets
 from data_gatherer import DataGatherer
-from funcs import (
+from funcs import ( # noqa
     one_hot,
     sigmoid,
     sigmoid_derv,
