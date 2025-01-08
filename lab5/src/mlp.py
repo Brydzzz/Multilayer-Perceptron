@@ -107,9 +107,9 @@ class MLP:
         Args:
             training_data (pd.DataFrame): The dataset.
             epochs (int): How many epochs.
-            mini_batch_size (int) Batch size.
-            learning rate (float) Used for gradient descent.
-            class_column (float) used to seperate the classes from the dataset
+            mini_batch_size (int): Mini-batch size.
+            learning rate (float): Used for gradient descent.
+            class_column (float): used to separate the classes from the dataset
 
         Returns:
             Nothing
@@ -170,7 +170,7 @@ class MLP:
             X (pd.DataFrame): The dataset.
 
         Returns:
-            list[int]: Network output
+            np.ndarray[float]: Network output
         """
         predictions = []
         for _, row in X.iterrows():
