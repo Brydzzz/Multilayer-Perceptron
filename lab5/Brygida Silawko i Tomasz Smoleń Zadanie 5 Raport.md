@@ -28,7 +28,9 @@ W funkcji train możemy też wybrać:
 
 Input skalujemy, żeby wartości wektora mieścił się w wartości pomiędzy 0 a 1.
 
-Wybieramy najbardziej prawdopodobną klasę, którą zwrócił softmax
+Wybieramy najbardziej prawdopodobną klasę, którą zwrócił softmax.
+
+Cyfry z MNIST kodujemy one hot encoding.
 
 ## 2. Cel eksperymentów
 
