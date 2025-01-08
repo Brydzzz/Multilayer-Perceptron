@@ -1,5 +1,6 @@
 import sklearn.datasets
-from lab5.src.funcs import (
+from data_gatherer import DataGatherer
+from funcs import (
     one_hot,
     sigmoid,
     sigmoid_derv,
@@ -39,12 +40,13 @@ if __name__ == "__main__":
     train_set, test_set, y_train, y_test = train_test_split(
         digits.data, digits.target, test_size=0.6, random_state=42
     )
-    train_set = rescale_inputs(train_set)
-    test_set = rescale_inputs(test_set)
-    train_set["target"] = y_train
     test_set, valid_set, y_test, y_val = train_test_split(
         test_set, y_test, test_size=0.5, random_state=42
     )
+    train_set = rescale_inputs(train_set)
+    valid_set = rescale_inputs(valid_set)
+    test_set = rescale_inputs(test_set)
+    train_set["target"] = y_train
     mlp = MLP(
         layers_sizes=[64, 128, 64, 32, 16, 8, 10],
         loss_func=avg_square_loss,
@@ -71,3 +73,19 @@ if __name__ == "__main__":
     classes = [softmax_to_digits(result) for result in results]
     accuracy = sklearn.metrics.accuracy_score(y_test, classes)
     print(f"Accuracy: {accuracy}")
+
+    mb_sizes = [5, 10, 30, 50, 75, 100]
+    lrs = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    epochs = 20
+    dg = DataGatherer(
+        epochs=epochs,
+        mini_batch_sizes=mb_sizes,
+        learning_rates=lrs,
+        train_set=train_set,
+        test_set=test_set,
+        valid_set=valid_set,
+        y_valid=y_val,
+        y_test=y_test,
+        n_runs=20,
+    )
+    dg.generate_data()
