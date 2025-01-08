@@ -55,3 +55,16 @@ def six_init(nout, nin):
 
 def basic_bias(n):
     return np.random.uniform(low=-1, high=1, size=(n, 1))
+
+
+def one_hot(number: int):
+    encode = np.zeros(shape=(10, 1))
+    encode[number] = 1
+    return encode
+
+
+def softmax_to_digits(array):
+    exp_values = np.exp(array - np.max(array))
+    probabilities = exp_values / np.sum(exp_values)
+
+    return np.argmax(probabilities)

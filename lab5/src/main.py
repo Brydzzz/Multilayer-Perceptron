@@ -1,5 +1,6 @@
 import sklearn.datasets
-from funcs import (
+from lab5.src.funcs import (
+    one_hot,
     sigmoid,
     sigmoid_derv,
     softmax,
@@ -10,18 +11,12 @@ from funcs import (
     relu_derv,
     six_init,
     basic_bias,
+    softmax_to_digits,
 )
 import numpy as np
-import pandas as pd
 from mlp import MLP
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
-
-
-def one_hot(number: int):
-    encode = np.zeros(shape=(10, 1))
-    encode[number] = 1
-    return encode
 
 
 def scale_row(X):
@@ -72,12 +67,6 @@ if __name__ == "__main__":
     )
 
     results = mlp.predict(test_set)
-
-    def softmax_to_digits(array):
-        exp_values = np.exp(array - np.max(array))
-        probabilities = exp_values / np.sum(exp_values)
-
-        return np.argmax(probabilities)
 
     classes = [softmax_to_digits(result) for result in results]
     accuracy = sklearn.metrics.accuracy_score(y_test, classes)
