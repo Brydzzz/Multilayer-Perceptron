@@ -3,9 +3,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import sklearn
-from lab5.src.funcs import (
+from funcs import (
     avg_sqr_derv,
     basic_bias,
+    one_hot,
     relu,
     relu_derv,
     six_init,
@@ -13,8 +14,7 @@ from lab5.src.funcs import (
     softmax_derv,
     softmax_to_digits,
 )
-from lab5.src.main import one_hot
-from lab5.src.mlp import MLP
+from mlp import MLP
 
 
 class DataGatherer:
@@ -22,10 +22,10 @@ class DataGatherer:
         self,
         mini_batch_sizes: list[int],
         learning_rates: list[float],
-        train_set: pd.Dataframe,
-        valid_set: pd.Dataframe,
+        train_set: pd.DataFrame,
+        valid_set: pd.DataFrame,
         y_valid: pd.Series,
-        test_set: pd.Dataframe,
+        test_set: pd.DataFrame,
         y_test: pd.Series,
         class_column="target",
         layers_sizes=[64, 48, 32, 16, 8, 10],
@@ -35,6 +35,7 @@ class DataGatherer:
         weight_init=six_init,
         bias_init=basic_bias,
         epochs=100,
+        n_runs=20,
     ):
         self.mini_batch_sizes = mini_batch_sizes
         self.learning_rates = learning_rates
@@ -45,11 +46,13 @@ class DataGatherer:
         self.test_set = test_set
         self.class_column = class_column
         self.layers_sizes = layers_sizes
-        self.loss_derv = loss_func_derv
-        self.activation = activation_func
+        self.loss_func_derv = loss_func_derv
+        self.activation_func = activation_func
         self.activation_derv = activation_derv
         self.weight_init = weight_init
         self.bias_init = bias_init
+        self.epochs = epochs
+        self.n_runs = n_runs
 
     def _save_to_csv(self, data):
         with open("lab5/data/test.csv", "w", newline="") as csvfile:
@@ -82,14 +85,15 @@ class DataGatherer:
                 label=f"Batch Size: {int(mb_size)}",
             )
 
-        plt.xscale("log")
         plt.xlabel("Learning Rate")
+        plt.xticks(lr_values)
         plt.ylabel("Accuracy")
         plt.title(
-            "Validation Accuracy vs Learning Rate for Different Mini-batch Sizes"
+            "Validation Accuracy vs Learning Rate for Different Mini-batch Sizes",
         )
         plt.legend()
         plt.grid(True, which="minor", linestyle="--", alpha=0.4)
+        plt.savefig("lab5/data/results_plot.png", dpi=150)
         plt.show()
 
     def _calculate_accuracy(self, predictions, on_test: bool = False):
@@ -143,34 +147,50 @@ class DataGatherer:
         self, save_to_csv: bool = True, plot_results: bool = True
     ):
         mini_batch_results = []
+        iters_count = 1
+        max_iters = len(self.mini_batch_sizes) * len(self.learning_rates)
         for mb_size in self.mini_batch_sizes:
-            # lr_accuracy = []
             for lr in self.learning_rates:
-                mlp = MLP(
-                    self.layers_sizes,
-                    self.activation_func,
-                    self.loss_func_derv,
-                    self.activation_derv,
-                    softmax,
-                    softmax_derv,
-                    one_hot,
-                    self.weight_init,
-                    self.bias_init,
+                print(f"STARTED ITERATION: {iters_count}/{max_iters}")
+                lr_accuracies = []
+                for run in range(self.n_runs):
+                    mlp = MLP(
+                        self.layers_sizes,
+                        self.activation_func,
+                        self.loss_func_derv,
+                        self.activation_derv,
+                        softmax,
+                        softmax_derv,
+                        one_hot,
+                        self.weight_init,
+                        self.bias_init,
+                    )
+                    mlp.train(
+                        training_data=self.train_set,
+                        epochs=self.epochs,
+                        mini_batch_size=mb_size,
+                        learning_rate=lr,
+                        class_column=self.class_column,
+                    )
+                    predictions = mlp.predict(self.valid_set)
+                    # lr_accuracy.append(
+                    #     (lr, self._calculate_val_accuracy(predictions))
+                    # )
+                    accuracy = self._calculate_accuracy(predictions)
+                    lr_accuracies.append(accuracy)
+                    print(
+                        f"Results for run {run+1}/{self.n_runs} mini-batch "
+                        f"{mb_size} and lr {lr}: {accuracy:.4f}",
+                    )
+                avg_accuracy = np.mean(lr_accuracies)
+                std_accuracy = np.std(lr_accuracies)
+
+                mini_batch_results.append((mb_size, lr, avg_accuracy))
+                print(
+                    f"Average accuracy for mini-batch {mb_size} and lr {lr}: "
+                    f"{avg_accuracy:.4f} ± {std_accuracy:.4f}"
                 )
-                mlp.train(
-                    training_data=self.train_set,
-                    epochs=self.epochs,
-                    mini_batch_size=mb_size,
-                    learning_rate=lr,
-                    class_column=self.class_column,
-                )
-                predictions = mlp.predict(self.valid_set)
-                # lr_accuracy.append(
-                #     (lr, self._calculate_val_accuracy(predictions))
-                # )
-                mini_batch_results.append(
-                    (mb_size, lr, self._calculate_accuracy(predictions))
-                )
+                iters_count += 1
 
         best_parameters = self._find_best_parameters(mini_batch_results)
         best_accuracy = self._calculate_best_accuracy(best_parameters)
@@ -180,8 +200,8 @@ class DataGatherer:
         print(f"Validation accuracy: {best_accuracy:.4f}")
 
         if save_to_csv:
-            self._save_to_csv()
+            self._save_to_csv(mini_batch_results)
         if plot_results:
-            self._plot_results()
+            self._plot_results(mini_batch_results)
 
         return mini_batch_results
