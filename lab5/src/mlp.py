@@ -153,7 +153,7 @@ class MLP:
 
     def initialize_mini_batches(
         self, t_data: pd.DataFrame, mini_batch_size: int
-    ):
+    ) -> list[pd.DataFrame]:
         """
         Split the training data into mini batches of a given size
         """
