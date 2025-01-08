@@ -14,9 +14,9 @@ class MLP:
         output_func: Callable,
         output_derv: Callable,
         target_fit: Callable,
+        weight_init: Callable,
+        bias_init: Callable,
     ):
-        self.weights = self.__init_weights(layers_sizes)
-        self.biases = self.__init_biases(layers_sizes)
         self.loss = loss_func
         self.activation = activation_func
         self.loss_derv = loss_derv
@@ -24,21 +24,19 @@ class MLP:
         self.output_activ = output_func
         self.output_derv = output_derv
         self.target_fit = target_fit
+        self.weight_init = weight_init
+        self.bias_init = bias_init
+        self.weights = self.__init_weights(layers_sizes)
+        self.biases = self.__init_biases(layers_sizes)
 
     def __init_weights(self, lsizes):
         return [
-            np.random.uniform(
-                low=-np.sqrt(1 / nin),
-                high=np.sqrt(1 / nin),
-                size=(nout, nin),
-            )
+            self.weight_init(nout, nin)
             for nout, nin in zip(lsizes[1:], lsizes[:-1])
         ]
 
     def __init_biases(self, lsizes):
-        return [
-            np.random.uniform(low=-1, high=1, size=(n, 1)) for n in lsizes[1:]
-        ]
+        return [self.bias_init(n) for n in lsizes[1:]]
 
     def feed_forward(self, a: np.ndarray) -> np.ndarray:
         a = a.reshape(a.shape[0], 1)

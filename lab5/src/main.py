@@ -1,5 +1,5 @@
 import sklearn.datasets
-from xor import (
+from funcs import (
     sigmoid,
     sigmoid_derv,
     softmax,
@@ -7,7 +7,9 @@ from xor import (
     avg_square_loss,
     avg_sqr_derv,
     relu,
-    relu_der,
+    relu_derv,
+    six_init,
+    basic_bias,
 )
 import numpy as np
 import pandas as pd
@@ -39,33 +41,37 @@ def rescale_inputs(X):
 if __name__ == "__main__":
     # mnsint test data
     digits = load_digits(as_frame=True)
-    X_train, X_test, y_train, y_test = train_test_split(
-        digits.data, digits.target, test_size=0.3, random_state=42
+    train_set, test_set, y_train, y_test = train_test_split(
+        digits.data, digits.target, test_size=0.6, random_state=42
     )
-    # X_train = rescale_inputs(X_train)
-    # X_test = rescale_inputs(X_test)
-    X_train["target"] = y_train
-    # X_test["target"] = y_test
+    train_set = rescale_inputs(train_set)
+    test_set = rescale_inputs(test_set)
+    train_set["target"] = y_train
+    test_set, valid_set, y_test, y_val = train_test_split(
+        test_set, y_test, test_size=0.5, random_state=42
+    )
     mlp = MLP(
-        layers_sizes=[64, 100, 50, 25, 10],
+        layers_sizes=[64, 128, 64, 32, 16, 8, 10],
         loss_func=avg_square_loss,
-        activation_func=sigmoid,
+        activation_func=relu,
         loss_derv=avg_sqr_derv,
-        activation_derv=sigmoid_derv,
+        activation_derv=relu_derv,
         output_func=softmax,
         output_derv=softmax_derv,
         target_fit=one_hot,
+        weight_init=six_init,
+        bias_init=basic_bias,
     )
 
     mlp.train(
-        training_data=X_train,
+        training_data=train_set,
         epochs=100,
         mini_batch_size=10,
-        learning_rate=0.5,
+        learning_rate=0.55,
         class_column="target",
     )
 
-    results = mlp.predict(X_test)
+    results = mlp.predict(test_set)
 
     def softmax_to_digits(array):
         exp_values = np.exp(array - np.max(array))
