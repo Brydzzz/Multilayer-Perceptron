@@ -197,7 +197,7 @@ class DataGatherer:
         print("Best configuration found:")
         print(f"Mini-batch size: {best_parameters[0]}")
         print(f"Learning rate: {best_parameters[1]}")
-        print(f"Validation accuracy: {best_accuracy:.4f}")
+        print(f"Test accuracy: {best_accuracy:.4f}")
 
         if save_to_csv:
             self._save_to_csv(mini_batch_results)
