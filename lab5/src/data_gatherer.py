@@ -173,9 +173,6 @@ class DataGatherer:
                         class_column=self.class_column,
                     )
                     predictions = mlp.predict(self.valid_set)
-                    # lr_accuracy.append(
-                    #     (lr, self._calculate_val_accuracy(predictions))
-                    # )
                     accuracy = self._calculate_accuracy(predictions)
                     lr_accuracies.append(accuracy)
                     print(
