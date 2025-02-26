@@ -19,7 +19,7 @@ The Perceptron is in `mlp.py`. It is a general implementation which can use:
 ## Showcase
 
 The showcase is in `main.py`.
-We train the model on hand drawng digits from the MNIST dataset, and then check it's performance on the testing set.
+We train the model on hand drawn digits from the MNIST dataset, and then check it's performance on the testing set.
 Functions used:
 - average square loss function
 - ReLu hidden layer acitvation
