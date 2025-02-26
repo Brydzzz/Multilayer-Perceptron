@@ -11,6 +11,7 @@ The Perceptron is in `mlp.py`. It is a general implementation which can use:
 - different loss functions
   This all makes the implementation suited for many different tasks.
   It uses Stochastic Gradient Descent by splitting the data into mini batches.
+  
   Libraries used:
 - `numpy`
 - `pandas`
